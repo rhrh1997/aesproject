@@ -13,6 +13,16 @@ def setupArguments():
 	args = vars(parser.parse_args())
 	return args
 
+def returnInsideKeyfile(keyfileName):
+	filename = keyfileName
+	file = open(filename, "r")
+	return file.read()
+	
+def inputFileBytes(inputfileName):
+	filename = inputfileName
+	file = open(filename, 'rb')
+	return file.read()
+
 if __name__ == "__main__":
 	#main()
 	arguments = setupArguments()
@@ -21,6 +31,9 @@ if __name__ == "__main__":
 	inputfile = arguments['inputfile']
 	outputfile = arguments['outputfile']
 	mode = arguments['mode']
+	#print(returnInsideKeyfile(keyfile))
+	print(inputFileBytes(inputfile))
+
 
 
 
