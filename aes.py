@@ -59,18 +59,28 @@ def returnInsideKeyfile(keyfileName):
 	return file.read()
 	
 def inputFileBytes(inputfileName):
-	#Do not use this probably it does not work?
+	#read in file byte by byte and store each byte as an element in an array
 	filename = inputfileName
-	file = open(filename, 'rb')
-	return file.read(1024*1024)
-	
-def encrypt(keysize, key, inputfile, output):
+	bb = bytearray()
+	c = 0
+	file = open(filename, "rb")
+	bb = file.read().encode("hex")
+	file.seek(0)
+	barray = [["0"] for i in range(len(bb)/2)]
+	while(file.read(1) != ""):
+		file.seek(c)
+		barray[c] = (file.read(1).encode("hex"))
+		c += 1
+	return barray
+
+def encrypt(keysize, key, inputfile):
+	print(inputfile)
 	if(key == 128):
 		return
 	if(key == 256):
 		return
 	
-def decrypt(keysize, key, inputfile, output):
+def decrypt(keysize, key, inputfile):
 	if(key == 128):
 		return
 	if(key == 256):
@@ -96,12 +106,15 @@ if __name__ == "__main__":
 	inputfile = arguments['inputfile']
 	outputfile = arguments['outputfile']
 	mode = arguments['mode']
+
 	if None in (keysize, keyfile, inputfile, outputfile, mode):
 		print("Required arguments missing")
 		sys.exit()
 	#print(returnInsideKeyfile(keyfile))
-	print(inputFileBytes(inputfile))
 
-
-
-
+	if(mode == 'encrypt'):
+		encrypt(keysize, keyfile, inputFileBytes(inputfile))
+	elif(mode == 'decrypt'):
+		decrypt(keysize, returnInsideKeyfile(keyfile), inputFileBytes(inputfile))
+	else:
+		print('invalid mode')
