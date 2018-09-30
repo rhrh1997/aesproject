@@ -81,8 +81,42 @@ def inputFileBytes(inputfileName):
 
 def encrypt(keysize, key, inputfile):
 	state = [["0"] for i in range(16)]
+	inputfile[0] = '0x32'
+	inputfile[1] = '0x43'
+	inputfile[2] = '0xf6'
+	inputfile[3] = '0xa8'
+	inputfile[4] = '0x88'
+	inputfile[5] = '0x5a'
+	inputfile[6] = '0x30'
+	inputfile[7] = '0x8d'
+	inputfile[8] = '0x31'
+	inputfile[9] = '0x31'
+	inputfile[10] = '0x98'
+	inputfile[11] = '0xa2'
+	inputfile[12] = '0xe0'
+	inputfile[13] = '0x37'
+	inputfile[14] = '0x07'
+	inputfile[15] = '0x34'
+
+	key[0] = '0x2b'
+	key[1] = '0x7e'
+	key[2] = '0x15'
+	key[3] = '0x16'
+	key[4] = '0x28'
+	key[5] = '0xae'
+	key[6] = '0xd2'
+	key[7] = '0xa6'
+	key[8] = '0xab'
+	key[9] = '0xf7'
+	key[10] = '0x15'
+	key[11] = '0x88'
+	key[12] = '0x09'
+	key[13] = '0xcf'
+	key[14] = '0x4f'
+	key[15] = '0x3c'
 	print("input", inputfile)
 	print("key", key)
+
 	out = [["0"] for i in range(len(inputfile))]
 	nround = 1
 	filecursor = 0
@@ -98,15 +132,17 @@ def encrypt(keysize, key, inputfile):
 				state[x] = inputfile[x+filecursor]
 			state = addRoundKey(state, keyschedule)
 			
-			for x in range(1):
+			for x in range(9):
 				state = subBytes(state)
 				state = shiftRows(state)
 				state = mixColumns(state)
-			#	state = addRoundKey(state, keyschedule)
-
-
+				state = addRoundKey(state, keyschedule)
+			subBytes(state)
+			shiftRows(state)
+			addRoundKey(state, keyschedule)
 			filecursor += 16
-		return 
+		print(state)
+		return state
 	if(keysize == 256):
 		return
 	
@@ -134,58 +170,27 @@ def shiftRows(state):
 	return temp
 	
 def mixColumns(state):
-	print(hex(((int('0xbf', 16)<<1)^int('0x1b', 16)^int('0xbf', 16))%256))
-	two = 2
-	three = 3
+	#print(hex(((int('0xbf', 16)<<1)^int('0x1b', 16)^int('0xbf', 16))%256))
+	#copy is a copy of the original values of state for calculation purposes
+	#temp is a copy of the multiplicative values of the state values in the given matrix multiplcaiton algorithm
+	copy = ['0x00' for i in range(4)]
 	temp = ['0x00' for i in range(4)]
-	print("before", state)
+	#leadind indicates whether a number starts with a 1 or 0
+	leadind = 255
+
 	for c in range(4):
-		if(bin(int(state[c*4], 16))[2:3] == '1'):
-			two = hex(((int(state[c*4], 16)<<1)^int('0x1b', 16)))
-		else:
-			two = hex((int(state[c*4], 16)<<1))
-		if(bin(int(state[c*4+1], 16))[2:3] == '1'):
-			three = hex(((int(state[c*4+1], 16)<<1)^int('0x1b', 16)^int(state[c*4+1], 16)))
-		else:
-			three = hex(((int(state[c*4+1], 16)<<1)^int(state[c*4+1], 16)))
-		x = int(two, 16)^int(three, 16)^int(state[c*4+2], 16)^int(state[c*4+3], 16)
-		temp[0] = hex(x%256)
-
-		if(bin(int(state[c*4+1], 16))[2:3] == '1'):
-			two = hex(((int(state[c*4+1], 16)<<1)^int('0x1b', 16)))
-		else:
-			two = hex((int(state[c*4+1], 16)<<1))
-		if(bin(int(state[c*4+2], 16))[2:3] == '1'):
-			three = hex(((int(state[c*4+2], 16)<<1)^int('0x1b', 16)^int(state[c*4+2], 16)))
-		else:
-			three = hex(((int(state[c*4+2], 16)<<1)^int(state[c*4+2], 16)))
-		x = int(state[c*4], 16)^int(two, 16)^int(three, 16)^int(state[c*4+3], 16)
-		temp[1] = hex(x%256)
-
-		if(bin(int(state[c*4+2], 16))[2:3] == '1'):
-			two = hex(((int(state[c*4+2], 16)<<1)^int('0x1b', 16)))
-		else:
-			two = hex((int(state[c*4+2], 16)<<1))
-		if(bin(int(state[c*4+3], 16))[2:3] == '1'):
-			three = hex(((int(state[c*4+3], 16)<<1)^int('0x1b', 16)^int(state[c*4+3], 16)))
-		else:
-			three = hex(((int(state[c*4+3], 16)<<1)^int(state[c*4+3], 16)))
-		x = int(state[c*4], 16)^int(state[c*4+1], 16)^int(two, 16)^int(three, 16)
-		temp[2] = hex(x%256)
-
-		if(bin(int(state[c*4+3], 16))[2:3] == '1'):
-			two = hex(((int(state[c*4+3], 16)<<1)^int('0x1b', 16))%256)
-		else:
-			two = hex((int(state[c*4+3], 16)<<1)%256)
-		if(bin(int(state[c*4], 16))[2:3] == '1'):
-			three = hex(((int(state[c*4], 16)<<1)^int('0x1b', 16)^int(state[c*4], 16)))
-		else:
-			three = hex(((int(state[c*4], 16)<<1)^int(state[c*4], 16)))
-		x = int(three, 16)^int(state[c*4+1], 16)^int(state[c*4+2], 16)^int(two, 16)
-		temp[3] = hex(x%256)
 		for r in range(4):
-			state[c*4+r] = temp[r]
-	print("after", state)
+			copy[r] = int(state[c*4+r], 16)
+			if(format(int(state[c*4+r], 16), '#010b')[2:3] == '1'):
+				leadind = 255
+			else:
+				leadind = 0
+			temp[r] = int(state[c*4+r], 16) << 1
+			temp[r] = temp[r]^27&leadind
+		state[c*4] = "0x{:02x}".format((temp[0]^copy[3]^copy[2]^temp[1]^copy[1])%256)
+		state[1+c*4] = "0x{:02x}".format((temp[1]^copy[0]^copy[3]^temp[2]^copy[2])%256)
+		state[2+c*4] = "0x{:02x}".format((temp[2]^copy[1]^copy[0]^temp[3]^copy[3])%256)
+		state[3+c*4] = "0x{:02x}".format((temp[3]^copy[2]^copy[1]^temp[0]^copy[0])%256)
 	return state
 	
 def addRoundKey(state, keyschedule):
@@ -193,7 +198,7 @@ def addRoundKey(state, keyschedule):
 		bs = int(state[e], 16)
 		bk = int(keyschedule[e], 16)
 		bs = bs ^ bk
-		state[e] = hex(bs)
+		state[e] = "0x{:02x}".format(bs)
 	return state
 	
 if __name__ == "__main__":
