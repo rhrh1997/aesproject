@@ -73,7 +73,7 @@ def inputFileBytes(inputfileName):
 	file = open(filename, "rb")
 	bb = file.read().encode("hex")
 	file.seek(0)
-	barray = ['0x00' for i in range(len(bb)/2+len(bb)%16/2)]
+	barray = ['0x00' for i in range(len(bb)/2+(16-len(bb)%16/2))]
 	while(file.read(1) != ""):
 		file.seek(c)
 		barray[c] = hex(int(file.read(1).encode("hex"), 16))
@@ -87,7 +87,6 @@ def encrypt(keysize, key, inputfile):
 
 	out = ["0x00" for i in range(len(inputfile))]
 	filecursor = 0
-	print(len(inputfile), len(out))
 	#need to add key expansion to create the key schedule based off the key that is given
 	keyschedule = keyExpansion(key, keysize)
 
@@ -116,6 +115,7 @@ def encrypt(keysize, key, inputfile):
 			filecursor += 16
 
 		return out
+
 	if(keysize == 256):
 		while(filecursor < len(inputfile)-1):
 			keyindex = 0
@@ -125,7 +125,7 @@ def encrypt(keysize, key, inputfile):
 			state = addRoundKey(state, keyschedule, keyindex)
 			keyindex += 4
 			
-			for x in range(9):
+			for x in range(13):
 				state = subBytes(state)
 				state = shiftRows(state)
 				state = mixColumns(state)
@@ -141,6 +141,7 @@ def encrypt(keysize, key, inputfile):
 			filecursor += 16
 			
 		return out
+	return
 	
 def decrypt(keysize, key, inputfile):
 	state = [["0"] for i in range(16)]
@@ -149,7 +150,6 @@ def decrypt(keysize, key, inputfile):
 
 	out = ["0x00" for i in range(len(inputfile))]
 	filecursor = 0
-	print(len(inputfile), len(out))
 	#need to add key expansion to create the key schedule based off the key that is given
 	keyschedule = keyExpansion(key, keysize)
 
@@ -163,23 +163,47 @@ def decrypt(keysize, key, inputfile):
 			keyindex += 4
 			
 			for x in range(9):
-				state = subBytes(state)
-				state = shiftRows(state)
-				state = mixColumns(state)
+				state = invShiftRows(state)
+				state = invSubBytes(state)
 				state = addRoundKey(state, keyschedule, keyindex)
+				state = invMixColumns(state)
 				keyindex += 4
-			state = subBytes(state)
-			state = shiftRows(state)
+			state = invShiftRows(state)
+			state = invSubBytes(state)
 			state = addRoundKey(state, keyschedule, keyindex)
 
 			for x in range(16):
 				out[x+filecursor] = state[x]
 
 			filecursor += 16
-
 		return out
-	if(key == 256):
-		return
+
+	if(keysize == 256):
+		while(filecursor < len(inputfile)-1):
+			keyindex = 0
+			#transfers values from input into state
+			for x in range(16):
+				state[x] = inputfile[x+filecursor]
+			state = addRoundKey(state, keyschedule, keyindex)
+			keyindex += 4
+			
+			for x in range(13):
+				state = invShiftRows(state)
+				state = invSubBytes(state)
+				state = addRoundKey(state, keyschedule, keyindex)
+				state = invMixColumns(state)
+				keyindex += 4
+			state = invShiftRows(state)
+			state = invSubBytes(state)
+			state = addRoundKey(state, keyschedule, keyindex)
+
+			for x in range(16):
+				out[x+filecursor] = state[x]
+
+			filecursor += 16
+		return out
+	
+	return
 		
 def subBytes(state):
 	#use substitution matrix to replace values in state with substition values
@@ -199,29 +223,59 @@ def shiftRows(state):
 	return temp
 	
 def mixColumns(state):
-	#print(hex(((int('0xbf', 16)<<1)^int('0x1b', 16)^int('0xbf', 16))%256))
 	#copy is a copy of the original values of state for calculation purposes
 	#temp is a copy of the multiplicative values of the state values in the given matrix multiplcaiton algorithm
 	copy = ['0x00' for i in range(4)]
 	temp = ['0x00' for i in range(4)]
-	#leadind indicates whether a number starts with a 1 or 0
-	leadind = 255
 
 	for c in range(4):
 		for r in range(4):
 			copy[r] = int(state[c*4+r], 16)
-			if(format(int(state[c*4+r], 16), '#010b')[2:3] == '1'):
-				leadind = 255
-			else:
-				leadind = 0
 			temp[r] = int(state[c*4+r], 16) << 1
-			temp[r] = temp[r]^27&leadind
+			if(format(int(state[c*4+r], 16), '#010b')[2:3] == '1'):
+				temp[r] = temp[r]^27
 		state[c*4] = "0x{:02x}".format((temp[0]^copy[3]^copy[2]^temp[1]^copy[1])%256)
 		state[1+c*4] = "0x{:02x}".format((temp[1]^copy[0]^copy[3]^temp[2]^copy[2])%256)
 		state[2+c*4] = "0x{:02x}".format((temp[2]^copy[1]^copy[0]^temp[3]^copy[3])%256)
 		state[3+c*4] = "0x{:02x}".format((temp[3]^copy[2]^copy[1]^temp[0]^copy[0])%256)
 	return state
 	
+def invSubBytes(state):
+	#use substitution matrix to replace values in state with substition values
+	for e in range(16):
+		state[e] = inverse_substitutions[int(state[e][2], 16)][int(state[e][3], 16)]
+	return state
+	
+def invShiftRows(state):
+	temp = ['0x00' for i in range(16)]
+	#copy first 4 elements as normal
+	for x in range(4):
+		temp[x*4] = state[x*4]
+	#perform shift algorithm on rest of list
+	for e in range(1, 4):
+		for f in range(4):
+			temp[(e+(4*(f+e)))%16] = state[e+(f*4)]
+	return temp
+	
+def invMixColumns(state):
+	#copy is a copy of the original values of state for calculation purposes
+	#temp is a copy of the multiplicative values of the state values in the given matrix multiplcaiton algorithm
+	copy = ['0x00' for i in range(4)]
+	temp = ['0x00' for i in range(4)]
+
+	for c in range(4):
+		for r in range(4):
+			copy[r] = int(state[c*4+r], 16)
+			temp[r] = int(state[c*4+r], 16) << 1
+			if(format(int(state[c*4+r], 16), '#010b')[2:3] == '1'):
+				temp[r] = temp[r]^27
+		state[c*4] = "0x{:02x}".format((temp[0]^copy[3]^copy[2]^temp[1]^copy[1])%256)
+		state[1+c*4] = "0x{:02x}".format((temp[1]^copy[0]^copy[3]^temp[2]^copy[2])%256)
+		state[2+c*4] = "0x{:02x}".format((temp[2]^copy[1]^copy[0]^temp[3]^copy[3])%256)
+		state[3+c*4] = "0x{:02x}".format((temp[3]^copy[2]^copy[1]^temp[0]^copy[0])%256)
+	return state
+
+
 def addRoundKey(state, keyschedule, keyindex):
 	for e in range(16):
 		bs = int(state[e], 16)
@@ -254,7 +308,6 @@ def keyExpansion(key, keysize):
 		for x in range(4):
 			mschedule[i][x] = "0x{:02x}".format(int(mschedule[i-nk][x], 16)^int(temp[x], 16))
 		i += 1
-	print(mschedule)
 	return mschedule
 
 def subWord(word):
