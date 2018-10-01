@@ -157,42 +157,48 @@ def inputFileBytes(inputfileName):
 		file.seek(c)
 		barray[c] = hex(int(file.read(1).encode("hex"), 16))
 		c += 1
+	file.close()
 	return barray
+
+def writeOutputFile(output, byteArray):
+	print(byteArray)
+	with open(output, 'wb') as f:
+		f.write(bytearray([int(x,0) for x in byteArray]))
 
 def encrypt(keysize, key, inputfile):
 	state = [["0"] for i in range(16)]
-	inputfile[0] = "0x00"
-	inputfile[1] = "0x11"
-	inputfile[2] = "0x22"
-	inputfile[3] = "0x33"
-	inputfile[4] = "0x44"
-	inputfile[5] = "0x55"
-	inputfile[6] = "0x66"
-	inputfile[7] = "0x77"
-	inputfile[8] = "0x88"
-	inputfile[9] = "0x99"
-	inputfile[10] = "0xaa"
-	inputfile[11] = "0xbb"
-	inputfile[12] = "0xcc"
-	inputfile[13] = "0xdd"
-	inputfile[14] = "0xee"
-	inputfile[15] = "0xff"
-	key[0] = "0x00"
-	key[1] = "0x01"
-	key[2] = "0x02"
-	key[3] = "0x03"
-	key[4] = "0x04"
-	key[5] = "0x05"
-	key[6] = "0x06"
-	key[7] = "0x07"
-	key[8] = "0x08"
-	key[9] = "0x09"
-	key[10] = "0x0a"
-	key[11] = "0x0b"
-	key[12] = "0x0c"
-	key[13] = "0x0d"
-	key[14] = "0x0e"
-	key[15] = "0x0f"
+	# inputfile[0] = "0x00"
+	# inputfile[1] = "0x11"
+	# inputfile[2] = "0x22"
+	# inputfile[3] = "0x33"
+	# inputfile[4] = "0x44"
+	# inputfile[5] = "0x55"
+	# inputfile[6] = "0x66"
+	# inputfile[7] = "0x77"
+	# inputfile[8] = "0x88"
+	# inputfile[9] = "0x99"
+	# inputfile[10] = "0xaa"
+	# inputfile[11] = "0xbb"
+	# inputfile[12] = "0xcc"
+	# inputfile[13] = "0xdd"
+	# inputfile[14] = "0xee"
+	# inputfile[15] = "0xff"
+	# key[0] = "0x00"
+	# key[1] = "0x01"
+	# key[2] = "0x02"
+	# key[3] = "0x03"
+	# key[4] = "0x04"
+	# key[5] = "0x05"
+	# key[6] = "0x06"
+	# key[7] = "0x07"
+	# key[8] = "0x08"
+	# key[9] = "0x09"
+	# key[10] = "0x0a"
+	# key[11] = "0x0b"
+	# key[12] = "0x0c"
+	# key[13] = "0x0d"
+	# key[14] = "0x0e"
+	# key[15] = "0x0f"
 	print("input", inputfile)
 	print("key", key)
 
@@ -257,38 +263,38 @@ def encrypt(keysize, key, inputfile):
 def decrypt(keysize, key, inputfile):
 	state = [["0"] for i in range(16)]
 	
-	inputfile[0] = "0x69"
-	inputfile[1] = "0xc4"
-	inputfile[2] = "0xe0"
-	inputfile[3] = "0xd8"
-	inputfile[4] = "0x6a"
-	inputfile[5] = "0x7b"
-	inputfile[6] = "0x04"
-	inputfile[7] = "0x30"
-	inputfile[8] = "0xd8"
-	inputfile[9] = "0xcd"
-	inputfile[10] = "0xb7"
-	inputfile[11] = "0x80"
-	inputfile[12] = "0x70"
-	inputfile[13] = "0xb4"
-	inputfile[14] = "0xc5"
-	inputfile[15] = "0x5a"
-	key[0] = "0x00"
-	key[1] = "0x01"
-	key[2] = "0x02"
-	key[3] = "0x03"
-	key[4] = "0x04"
-	key[5] = "0x05"
-	key[6] = "0x06"
-	key[7] = "0x07"
-	key[8] = "0x08"
-	key[9] = "0x09"
-	key[10] = "0x0a"
-	key[11] = "0x0b"
-	key[12] = "0x0c"
-	key[13] = "0x0d"
-	key[14] = "0x0e"
-	key[15] = "0x0f"
+	# inputfile[0] = "0x69"
+	# inputfile[1] = "0xc4"
+	# inputfile[2] = "0xe0"
+	# inputfile[3] = "0xd8"
+	# inputfile[4] = "0x6a"
+	# inputfile[5] = "0x7b"
+	# inputfile[6] = "0x04"
+	# inputfile[7] = "0x30"
+	# inputfile[8] = "0xd8"
+	# inputfile[9] = "0xcd"
+	# inputfile[10] = "0xb7"
+	# inputfile[11] = "0x80"
+	# inputfile[12] = "0x70"
+	# inputfile[13] = "0xb4"
+	# inputfile[14] = "0xc5"
+	# inputfile[15] = "0x5a"
+	# key[0] = "0x00"
+	# key[1] = "0x01"
+	# key[2] = "0x02"
+	# key[3] = "0x03"
+	# key[4] = "0x04"
+	# key[5] = "0x05"
+	# key[6] = "0x06"
+	# key[7] = "0x07"
+	# key[8] = "0x08"
+	# key[9] = "0x09"
+	# key[10] = "0x0a"
+	# key[11] = "0x0b"
+	# key[12] = "0x0c"
+	# key[13] = "0x0d"
+	# key[14] = "0x0e"
+	# key[15] = "0x0f"
 	print("input", inputfile)
 	print("key", key)
 
@@ -322,13 +328,12 @@ def decrypt(keysize, key, inputfile):
 
 	if(keysize == 256):
 		while(filecursor < len(inputfile)-1):
-			keyindex = 0
+			keyindex = len(keyschedule)-4
 			#transfers values from input into state
 			for x in range(16):
 				state[x] = inputfile[x+filecursor]
 			state = addRoundKey(state, keyschedule, keyindex)
 			keyindex -= 4
-			
 			for x in range(13):
 				state = invShiftRows(state)
 				state = invSubBytes(state)
@@ -472,9 +477,9 @@ if __name__ == "__main__":
 	#print(returnInsideKeyfile(keyfile))
 
 	if(mode == 'encrypt'):
-		print(encrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile)))
+		writeOutputFile(outputfile, (encrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile))))
 	elif(mode == 'decrypt'):
-		print(decrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile)))
+		writeOutputFile(outputfile, decrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile)))
 	else:
 		print('invalid mode')
 
