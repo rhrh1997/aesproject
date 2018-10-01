@@ -30,8 +30,8 @@ to accomodate for and validate 256 bit keys. We had no issues with this, and the
 8. The last thing was converting our list of hex strings to a bytearray in the output file specified. We did this by opening
 and writing into the file each of the bytes in the array.
 
-Although we do not have any sample files in this repo, we did test several outputs and were excited to see that our encryption
-and decryption works as expected. The file can be run using the method specified in the project description from canvas.
-ie:
+Although we do not have any sample files in this repo, we did test several inputs and outputs both forwards and backwards
+and were excited to see that our encryption and decryption works as expected. The file can be run using the method specified
+in the project description from canvas, ie:
 
 python aes.py --keysize 128 --keyfile keyfile.txt --inputfile input.txt --outputfile output.txt --mode encrypt
