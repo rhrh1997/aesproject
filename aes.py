@@ -42,6 +42,7 @@ substitutions = (
 	['0x8C', '0xA1', '0x89', '0x0D', '0xBF', '0xE6', '0x42', '0x68', '0x41', '0x99', '0x2D', '0x0F', '0xB0', '0x54', '0xBB', '0x16'],
 )
 
+
 def setupArguments():
 	parser = argparse.ArgumentParser()
 	parser.add_argument("--keysize")
@@ -81,74 +82,102 @@ def inputFileBytes(inputfileName):
 
 def encrypt(keysize, key, inputfile):
 	state = [["0"] for i in range(16)]
-	inputfile[0] = '0x32'
-	inputfile[1] = '0x43'
-	inputfile[2] = '0xf6'
-	inputfile[3] = '0xa8'
-	inputfile[4] = '0x88'
-	inputfile[5] = '0x5a'
-	inputfile[6] = '0x30'
-	inputfile[7] = '0x8d'
-	inputfile[8] = '0x31'
-	inputfile[9] = '0x31'
-	inputfile[10] = '0x98'
-	inputfile[11] = '0xa2'
-	inputfile[12] = '0xe0'
-	inputfile[13] = '0x37'
-	inputfile[14] = '0x07'
-	inputfile[15] = '0x34'
-
-	key[0] = '0x2b'
-	key[1] = '0x7e'
-	key[2] = '0x15'
-	key[3] = '0x16'
-	key[4] = '0x28'
-	key[5] = '0xae'
-	key[6] = '0xd2'
-	key[7] = '0xa6'
-	key[8] = '0xab'
-	key[9] = '0xf7'
-	key[10] = '0x15'
-	key[11] = '0x88'
-	key[12] = '0x09'
-	key[13] = '0xcf'
-	key[14] = '0x4f'
-	key[15] = '0x3c'
 	print("input", inputfile)
 	print("key", key)
 
-	out = [["0"] for i in range(len(inputfile))]
-	nround = 1
+	out = ["0x00" for i in range(len(inputfile))]
 	filecursor = 0
-	
+	print(len(inputfile), len(out))
 	#need to add key expansion to create the key schedule based off the key that is given
-	keyschedule = key
+	keyschedule = keyExpansion(key, keysize)
 
 	if(keysize == 128):
 		while(filecursor < len(inputfile)-1):
-
+			keyindex = 0
 			#transfers values from input into state
 			for x in range(16):
 				state[x] = inputfile[x+filecursor]
-			state = addRoundKey(state, keyschedule)
+			state = addRoundKey(state, keyschedule, keyindex)
+			keyindex += 4
 			
 			for x in range(9):
 				state = subBytes(state)
 				state = shiftRows(state)
 				state = mixColumns(state)
-				state = addRoundKey(state, keyschedule)
-			subBytes(state)
-			shiftRows(state)
-			addRoundKey(state, keyschedule)
+				state = addRoundKey(state, keyschedule, keyindex)
+				keyindex += 4
+			state = subBytes(state)
+			state = shiftRows(state)
+			state = addRoundKey(state, keyschedule, keyindex)
+
+			for x in range(16):
+				out[x+filecursor] = state[x]
+
 			filecursor += 16
-		print(state)
-		return state
+
+		return out
 	if(keysize == 256):
-		return
+		while(filecursor < len(inputfile)-1):
+			keyindex = 0
+			#transfers values from input into state
+			for x in range(16):
+				state[x] = inputfile[x+filecursor]
+			state = addRoundKey(state, keyschedule, keyindex)
+			keyindex += 4
+			
+			for x in range(9):
+				state = subBytes(state)
+				state = shiftRows(state)
+				state = mixColumns(state)
+				state = addRoundKey(state, keyschedule, keyindex)
+				keyindex += 4
+			state = subBytes(state)
+			state = shiftRows(state)
+			state = addRoundKey(state, keyschedule, keyindex)
+
+			for x in range(16):
+				out[x+filecursor] = state[x]
+
+			filecursor += 16
+			
+		return out
 	
 def decrypt(keysize, key, inputfile):
-	if(key == 128):
-		return
+	state = [["0"] for i in range(16)]
+	print("input", inputfile)
+	print("key", key)
+
+	out = ["0x00" for i in range(len(inputfile))]
+	filecursor = 0
+	print(len(inputfile), len(out))
+	#need to add key expansion to create the key schedule based off the key that is given
+	keyschedule = keyExpansion(key, keysize)
+
+	if(keysize == 128):
+		while(filecursor < len(inputfile)-1):
+			keyindex = 0
+			#transfers values from input into state
+			for x in range(16):
+				state[x] = inputfile[x+filecursor]
+			state = addRoundKey(state, keyschedule, keyindex)
+			keyindex += 4
+			
+			for x in range(9):
+				state = subBytes(state)
+				state = shiftRows(state)
+				state = mixColumns(state)
+				state = addRoundKey(state, keyschedule, keyindex)
+				keyindex += 4
+			state = subBytes(state)
+			state = shiftRows(state)
+			state = addRoundKey(state, keyschedule, keyindex)
+
+			for x in range(16):
+				out[x+filecursor] = state[x]
+
+			filecursor += 16
+
+		return out
 	if(key == 256):
 		return
 		
@@ -193,13 +222,52 @@ def mixColumns(state):
 		state[3+c*4] = "0x{:02x}".format((temp[3]^copy[2]^copy[1]^temp[0]^copy[0])%256)
 	return state
 	
-def addRoundKey(state, keyschedule):
+def addRoundKey(state, keyschedule, keyindex):
 	for e in range(16):
 		bs = int(state[e], 16)
-		bk = int(keyschedule[e], 16)
+		bk = int(keyschedule[e/4+keyindex][e%4], 16)
 		bs = bs ^ bk
 		state[e] = "0x{:02x}".format(bs)
 	return state
+
+def keyExpansion(key, keysize):
+	nk = keysize/32
+	if(keysize == 128):
+		nr = 10
+	else:
+		nr = 14
+	i = 0
+	rcon = ["0x01", "0x02", "0x04", "0x08", "0x10", "0x20", "0x40", "0x80", "0x1b", "0x36"]
+	mschedule = [["0x00"]*4 for x in range(4*(nr+1))]
+	while(i < nk):
+		mschedule[i] = [key[i*4], key[i*4+1], key[i*4+2], key[i*4+3]]
+		i += 1
+	i = nk
+
+	while(i < 4*(nr+1)):
+		temp = mschedule[i-1]
+		if(i%nk == 0):
+			temp = subWord(rotWord(temp))
+			temp[0] = "0x{:02x}".format(int(temp[0], 16)^int(rcon[i/nk-1], 16))
+		elif((nk > 6) and (i%nk == 4)):
+			temp = subWord(temp)
+		for x in range(4):
+			mschedule[i][x] = "0x{:02x}".format(int(mschedule[i-nk][x], 16)^int(temp[x], 16))
+		i += 1
+	print(mschedule)
+	return mschedule
+
+def subWord(word):
+	for e in range(4):
+		word[e] = substitutions[int(word[e][2], 16)][int(word[e][3], 16)]
+	return word
+
+def rotWord(word):
+	arr = ['0x00' for i in range(4)]
+	for e in range(3):
+		arr[e] = word[e+1]
+	arr[3] = word[0]
+	return arr
 	
 if __name__ == "__main__":
 	#main()
@@ -216,7 +284,7 @@ if __name__ == "__main__":
 	#print(returnInsideKeyfile(keyfile))
 
 	if(mode == 'encrypt'):
-		encrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile))
+		print(encrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile)))
 	elif(mode == 'decrypt'):
 		decrypt(int(keysize), returnInsideKeyfile(int(keysize), keyfile), inputFileBytes(inputfile))
 	else:
